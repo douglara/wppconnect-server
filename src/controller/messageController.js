@@ -27,10 +27,12 @@ async function returnSucess(res, data) {
 export async function sendMessage(req, res) {
   const { phone, message } = req.body;
 
+  const options = req.body.options || {};
+
   try {
     let results = [];
     for (const contato of phone) {
-      results.push(await req.client.sendText(contato, message));
+      results.push(await req.client.sendText(contato, message, options));
     }
 
     if (results.length === 0) return res.status(400).json('Error sending message');
@@ -172,23 +174,16 @@ export async function sendLocation(req, res) {
 }
 
 export async function sendButtons(req, res) {
-  const { phone, message = null, title, footer = null, dynamic_reply = true, buttons } = req.body;
+  const { phone, message, options } = req.body;
 
   try {
     let results = [];
 
     for (const contact of phone) {
-      results.push(
-        await req.client.sendMessageOptions(contact, message, {
-          title: title,
-          footer: footer,
-          isDynamicReplyButtonsMsg: dynamic_reply,
-          dynamicReplyButtons: buttons,
-        })
-      );
+      results.push(await req.client.sendText(contact, message, options));
     }
 
-    if (results.length === 0) return returnError(req, res, 'Error sending message');
+    if (results.length === 0) return returnError(req, res, 'Error sending message with buttons');
 
     returnSucess(res, phone, results);
   } catch (error) {
