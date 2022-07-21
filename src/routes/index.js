@@ -16,6 +16,8 @@
 import { Router } from 'express';
 import { encryptSession } from '../controller/encryptController';
 import * as MessageController from '../controller/messageController';
+import * as StatusController from '../controller/statusController';
+import * as LabelsController from '../controller/labelsController';
 import * as GroupController from '../controller/groupController';
 import * as DeviceController from '../controller/deviceController';
 import * as SessionController from '../controller/sessionController';
@@ -60,6 +62,20 @@ routes.post(
   statusConnection,
   MessageController.sendImage
 );
+routes.post(
+  '/api/:session/send-sticker',
+  upload.single('file'),
+  verifyToken,
+  statusConnection,
+  MessageController.sendImageAsSticker
+);
+routes.post(
+  '/api/:session/send-sticker-gif',
+  upload.single('file'),
+  verifyToken,
+  statusConnection,
+  MessageController.sendImageAsStickerGif
+);
 routes.post('/api/:session/send-reply', verifyToken, statusConnection, MessageController.replyMessage);
 routes.post(
   '/api/:session/send-file',
@@ -76,7 +92,7 @@ routes.post('/api/:session/send-link-preview', verifyToken, statusConnection, Me
 routes.post('/api/:session/send-location', verifyToken, statusConnection, MessageController.sendLocation);
 routes.post('/api/:session/send-mentioned', verifyToken, statusConnection, MessageController.sendMentioned);
 routes.post('/api/:session/send-buttons', verifyToken, statusConnection, MessageController.sendButtons);
-routes.post('/api/:session/send-buttons-list', verifyToken, statusConnection, MessageController.sendButtonsList);
+routes.post('/api/:session/send-list-message', verifyToken, statusConnection, MessageController.sendListMessage);
 
 // Group
 routes.get('/api/:session/all-broadcast-list', verifyToken, statusConnection, GroupController.getAllBroadcastList);
@@ -160,16 +176,15 @@ routes.get(
   statusConnection,
   DeviceController.loadAndGetAllMessagesInChat
 );
-routes.get(
-  '/api/:session/load-earlier-messages/:phone',
-  verifyToken,
-  statusConnection,
-  DeviceController.loadEarlierMessages
-);
+routes.get('/api/:session/get-messages/:phone', verifyToken, statusConnection, DeviceController.getMessages);
+
 routes.post('/api/:session/archive-chat', verifyToken, statusConnection, DeviceController.archiveChat);
+routes.post('/api/:session/archive-all-chats', verifyToken, statusConnection, DeviceController.archiveAllChats);
 routes.post('/api/:session/clear-chat', verifyToken, statusConnection, DeviceController.clearChat);
 routes.post('/api/:session/delete-chat', verifyToken, statusConnection, DeviceController.deleteChat);
+routes.post('/api/:session/delete-all-chats', verifyToken, statusConnection, DeviceController.deleteAllChats);
 routes.post('/api/:session/delete-message', verifyToken, statusConnection, DeviceController.deleteMessage);
+routes.post('/api/:session/react-message', verifyToken, statusConnection, DeviceController.reactMessage);
 routes.post('/api/:session/forward-messages', verifyToken, statusConnection, DeviceController.forwardMessages);
 routes.post('/api/:session/mark-unseen', verifyToken, statusConnection, DeviceController.markUnseenMessage);
 routes.post('/api/:session/pin-chat', verifyToken, statusConnection, DeviceController.pinChat);
@@ -180,23 +195,31 @@ routes.post('/api/:session/chat-state', verifyToken, statusConnection, DeviceCon
 routes.post('/api/:session/temporary-messages', verifyToken, statusConnection, DeviceController.setTemporaryMessages);
 routes.post('/api/:session/typing', verifyToken, statusConnection, DeviceController.setTyping);
 routes.post('/api/:session/star-message', verifyToken, statusConnection, DeviceController.starMessage);
+routes.post('/api/:session/reject-call', verifyToken, statusConnection, DeviceController.rejectCall);
 
 // Status
-routes.post('/api/:session/send-text-storie', verifyToken, statusConnection, MessageController.sendTextStorie);
+routes.post('/api/:session/send-text-storie', verifyToken, statusConnection, StatusController.sendTextStorie);
 routes.post(
   '/api/:session/send-image-storie',
   upload.single('file'),
   verifyToken,
   statusConnection,
-  MessageController.sendImageStorie
+  StatusController.sendImageStorie
 );
 routes.post(
   '/api/:session/send-video-storie',
   upload.single('file'),
   verifyToken,
   statusConnection,
-  MessageController.sendVideoStorie
+  StatusController.sendVideoStorie
 );
+
+// Labels
+routes.post('/api/:session/add-new-label', verifyToken, statusConnection, LabelsController.addNewLabel);
+routes.post('/api/:session/add-or-remove-label', verifyToken, statusConnection, LabelsController.addOrRemoveLabels);
+routes.get('/api/:session/get-all-labels', verifyToken, statusConnection, LabelsController.getAllLabels);
+routes.put('/api/:session/delete-all-labels', verifyToken, statusConnection, LabelsController.deleteAllLabels);
+routes.put('/api/:session/delete-label/:id', verifyToken, statusConnection, LabelsController.deleteLabel);
 
 // Contact
 routes.get(
@@ -223,7 +246,7 @@ routes.get('/api/:session/get-phone-number', verifyToken, statusConnection, Devi
 
 // Profile
 routes.post(
-  '/api/:session/profile-pic',
+  '/api/:session/set-profile-pic',
   upload.single('file'),
   verifyToken,
   statusConnection,

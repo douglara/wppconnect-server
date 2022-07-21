@@ -92,14 +92,16 @@ export async function sendFile(req, res) {
 }
 
 export async function sendFile64(req, res) {
-  const { base64, phone, filename = 'file', message } = req.body;
+  const { base64, phone, filename } = req.body;
 
   if (!base64) return res.status(401).send({ message: 'The base64 of the file was not informed' });
+
+  const options = req.body.options || {};
 
   try {
     let results = [];
     for (const contato of phone) {
-      results.push(await req.client.sendFileFromBase64(contato, base64, filename, message));
+      results.push(await req.client.sendFile(contato, base64, options.length > 0 ? options : filename));
     }
 
     if (results.length === 0) return res.status(400).json('Error sending message');
@@ -126,7 +128,7 @@ export async function sendVoice(req, res) {
 }
 
 export async function sendVoice64(req, res) {
-  const { phone, url: base64Ptt } = req.body;
+  const { phone, base64Ptt } = req.body;
 
   try {
     let results = [];
@@ -191,27 +193,18 @@ export async function sendButtons(req, res) {
   }
 }
 
-export async function sendButtonsList(req, res) {
-  const { phone, message = '', title, buttons, buttonText = 'SELECIONE UMA OPÇÃO' } = req.body;
+export async function sendListMessage(req, res) {
+  const { phone, description = '', sections, buttonText = 'SELECIONE UMA OPÇÃO' } = req.body;
 
   try {
     let results = [];
 
     for (const contact of phone) {
       results.push(
-        await req.client.sendMessageOptions(contact, null, {
-          type: 'list',
-          list: {
-            listType: 1,
-            title: title,
-            description: message,
-            buttonText: buttonText,
-            sections: [
-              {
-                rows: buttons,
-              },
-            ],
-          },
+        await req.client.sendListMessage(contact, {
+          buttonText: buttonText,
+          description: description,
+          sections: sections,
         })
       );
     }
@@ -270,62 +263,44 @@ export async function sendMentioned(req, res) {
     return res.status(500).json({ status: 'error', message: 'Error on send message mentioned' });
   }
 }
-
-export async function sendTextStorie(req, res) {
-  const { text } = req.body;
-
-  if (!text)
-    return res.status(401).send({
-      message: 'Text was not informed',
-    });
-
-  try {
-    let results = [];
-    results.push(await req.client.sendText('status@broadcast', text));
-
-    if (results.length === 0) return res.status(400).json('Error sending the text of stories');
-    returnSucess(res, results);
-  } catch (error) {
-    returnError(req, res, error);
-  }
-}
-
-export async function sendImageStorie(req, res) {
-  const { path, filename = 'image-storie', caption } = req.body;
+export async function sendImageAsSticker(req, res) {
+  const { phone, path } = req.body;
 
   if (!path && !req.file)
     return res.status(401).send({
-      message: 'Sending the image is mandatory',
+      message: 'Sending the file is mandatory',
     });
 
   const pathFile = path || req.file.path;
 
   try {
     let results = [];
-    results.push(await req.client.sendImage('status@broadcast', pathFile, filename, caption));
+    for (const contato of phone) {
+      results.push(await req.client.sendImageAsSticker(contato, pathFile));
+    }
 
-    if (results.length === 0) return res.status(400).json('Error sending the image of stories');
+    if (results.length === 0) return res.status(400).json('Error sending message');
     if (req.file) await unlinkAsync(pathFile);
     returnSucess(res, results);
   } catch (error) {
     returnError(req, res, error);
   }
 }
-
-export async function sendVideoStorie(req, res) {
-  const { path, filename = 'video', caption } = req.body;
+export async function sendImageAsStickerGif(req, res) {
+  const { phone, path } = req.body;
 
   if (!path && !req.file)
     return res.status(401).send({
-      message: 'Sending the Video is mandatory',
+      message: 'Sending the file is mandatory',
     });
 
   const pathFile = path || req.file.path;
 
   try {
     let results = [];
-
-    results.push(await req.client.sendFile('status@broadcast', pathFile, filename, caption));
+    for (const contato of phone) {
+      results.push(await req.client.sendImageAsStickerGif(contato, pathFile));
+    }
 
     if (results.length === 0) return res.status(400).json('Error sending message');
     if (req.file) await unlinkAsync(pathFile);

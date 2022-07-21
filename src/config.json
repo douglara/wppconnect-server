@@ -3,6 +3,7 @@
   "host": "http://localhost",
   "port": "21465",
   "deviceName": "WppConnect",
+  "poweredBy": "WPPConnect-Server",
   "startAllSession": true,
   "tokenStoreType": "file",
   "maxListeners": 15,
@@ -15,7 +16,8 @@
     "allUnreadOnStart": false,
     "listenAcks": true,
     "onPresenceChanged": true,
-    "onParticipantsChanged": true
+    "onParticipantsChanged": true,
+    "onReactionMessage": true
   },
   "archive": {
     "enable": false,
