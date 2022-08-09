@@ -23,11 +23,11 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server as Socket } from 'socket.io';
 import routes from './routes';
-import path from 'path';
 import config from './config.json';
 import boolParser from 'express-query-boolean';
 import mergeDeep from 'merge-deep';
 import { convert } from './mapper/index';
+import { version } from '../package.json';
 
 export function initServer(serverOptions) {
   if (typeof serverOptions !== 'object') {
@@ -94,6 +94,7 @@ export function initServer(serverOptions) {
   http.listen(PORT, () => {
     logger.info(`Server is running on port: ${PORT}`);
     logger.info(`\x1b[31m Visit ${serverOptions.host}:${PORT}/api-docs for Swagger docs`);
+    logger.info(`WPPConnect-Server version: ${version}`);
 
     if (serverOptions.startAllSession) startAllSessions(serverOptions, logger);
   });

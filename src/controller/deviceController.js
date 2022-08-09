@@ -263,8 +263,21 @@ export async function clearChat(req, res) {
   }
 }
 
+export async function clearAllChats(req, res) {
+  try {
+    const chats = await req.client.getAllChats();
+    for (const chat of chats) {
+      await req.client.clearChat(`${chat.chatId}`);
+    }
+    return res.status(201).json({ status: 'success' });
+  } catch (e) {
+    req.logger.error(e);
+    return res.status(500).json({ status: 'error', message: 'Error on clear all chats' });
+  }
+}
+
 export async function archiveChat(req, res) {
-  const { phone, value = true, isGroup = false } = req.body;
+  const { phone, value = true } = req.body;
 
   try {
     let response;
@@ -293,7 +306,7 @@ export async function deleteMessage(req, res) {
   const { phone, messageId } = req.body;
 
   try {
-    await req.client.deleteMessage(`${phone}@c.us`, [messageId]);
+    await req.client.deleteMessage(`${phone}`, [messageId]);
 
     return res.status(200).json({ status: 'success', response: { message: 'Message deleted' } });
   } catch (e) {
@@ -470,11 +483,11 @@ export async function loadAndGetAllMessagesInChat(req, res) {
 }
 export async function getMessages(req, res) {
   const { phone } = req.params;
-  const { count = 20, direction = 'before', id = 0 } = req.query;
+  const { count = 20, direction = 'before', id = null } = req.query;
   try {
     const response = await req.client.getMessages(`${phone}`, {
       count: parseInt(count),
-      direction: direction,
+      direction: direction.toString(),
       id: id,
     });
     return res.status(200).json({ status: 'success', response: response });
@@ -575,6 +588,22 @@ export async function setTyping(req, res) {
   } catch (error) {
     req.logger.error(error);
     return res.status(500).json({ status: 'error', message: 'Error on set typing' });
+  }
+}
+
+export async function setRecording(req, res) {
+  const { phone, value = true, duration, isGroup = false } = req.body;
+  try {
+    let response;
+    for (const contato of contactToArray(phone, isGroup)) {
+      if (value) response = await req.client.startRecording(contato, duration);
+      else response = await req.client.stopRecoring(contato);
+    }
+
+    return res.status(200).json({ status: 'success', response: response });
+  } catch (error) {
+    req.logger.error(error);
+    return res.status(500).json({ status: 'error', message: 'Error on set recording' });
   }
 }
 

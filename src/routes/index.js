@@ -181,6 +181,7 @@ routes.get('/api/:session/get-messages/:phone', verifyToken, statusConnection, D
 routes.post('/api/:session/archive-chat', verifyToken, statusConnection, DeviceController.archiveChat);
 routes.post('/api/:session/archive-all-chats', verifyToken, statusConnection, DeviceController.archiveAllChats);
 routes.post('/api/:session/clear-chat', verifyToken, statusConnection, DeviceController.clearChat);
+routes.post('/api/:session/clear-all-chats', verifyToken, statusConnection, DeviceController.clearAllChats);
 routes.post('/api/:session/delete-chat', verifyToken, statusConnection, DeviceController.deleteChat);
 routes.post('/api/:session/delete-all-chats', verifyToken, statusConnection, DeviceController.deleteAllChats);
 routes.post('/api/:session/delete-message', verifyToken, statusConnection, DeviceController.deleteMessage);
@@ -194,6 +195,7 @@ routes.post('/api/:session/send-seen', verifyToken, statusConnection, DeviceCont
 routes.post('/api/:session/chat-state', verifyToken, statusConnection, DeviceController.setChatState);
 routes.post('/api/:session/temporary-messages', verifyToken, statusConnection, DeviceController.setTemporaryMessages);
 routes.post('/api/:session/typing', verifyToken, statusConnection, DeviceController.setTyping);
+routes.post('/api/:session/recording', verifyToken, statusConnection, DeviceController.setRecording);
 routes.post('/api/:session/star-message', verifyToken, statusConnection, DeviceController.starMessage);
 routes.post('/api/:session/reject-call', verifyToken, statusConnection, DeviceController.rejectCall);
 

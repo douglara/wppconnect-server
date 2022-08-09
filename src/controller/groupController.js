@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { contactToArray, groupNameToArray, groupToArray, unlinkAsync } from '../util/functions';
+import { contactToArray, groupNameToArray, groupToArray } from '../util/functions';
 
 export async function getAllGroups(req, res) {
   try {
@@ -364,9 +364,16 @@ export async function changePrivacyGroup(req, res) {
 export async function setGroupProfilePic(req, res) {
   const { phone, path } = req.body;
 
+  if (!path && !req.file)
+    return res.status(401).send({
+      message: 'Sending the image is mandatory',
+    });
+
+  const pathFile = path || req.file.path;
+
   try {
     for (const contato of contactToArray(phone, true)) {
-      await req.client.setGroupIcon(contato, path);
+      await req.client.setGroupIcon(contato, pathFile);
     }
 
     return res

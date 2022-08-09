@@ -19,6 +19,7 @@ import CreateSessionUtil from '../util/createSessionUtil';
 import getAllTokens from '../util/getAllTokens';
 import fs from 'fs';
 import mime from 'mime-types';
+import { version } from '../../package.json';
 
 const SessionUtil = new CreateSessionUtil();
 
@@ -153,16 +154,20 @@ export async function startSession(req, res) {
 export async function closeSession(req, res) {
   const session = req.session;
   try {
-    clientsArray[session] = { status: null };
-    await req.client.close();
+    if (clientsArray[session].status === null) {
+      return await res.status(200).json({ status: true, message: 'Session successfully closed' });
+    } else {
+      clientsArray[session] = { status: null };
+      await req.client.close();
 
-    req.io.emit('whatsapp-status', false);
-    callWebHook(req.client, req, 'closesession', {
-      message: `Session: ${session} disconnected`,
-      connected: false,
-    });
+      req.io.emit('whatsapp-status', false);
+      callWebHook(req.client, req, 'closesession', {
+        message: `Session: ${session} disconnected`,
+        connected: false,
+      });
 
-    return await res.status(200).json({ status: true, message: 'Session successfully closed' });
+      return await res.status(200).json({ status: true, message: 'Session successfully closed' });
+    }
   } catch (error) {
     req.logger.error(error);
     return await res.status(500).json({ status: false, message: 'Error closing session', error });
@@ -274,6 +279,7 @@ export async function getSessionState(req, res) {
         status: client.status,
         qrcode: client.qrcode,
         urlcode: client.urlcode,
+        version: version,
       });
   } catch (ex) {
     req.logger.error(ex);
