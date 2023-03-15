@@ -17,7 +17,7 @@ import { unlinkAsync } from '../util/functions';
 
 function returnError(req, res, error) {
   req.logger.error(error);
-  res.status(500).json({ status: 'Error', message: 'Erro ao enviar a mensagem.' });
+  res.status(500).json({ status: 'Error', message: 'Erro ao enviar a mensagem.', error: error });
 }
 
 async function returnSucess(res, data) {
@@ -43,68 +43,25 @@ export async function sendMessage(req, res) {
   }
 }
 
-export async function sendImage(req, res) {
-  const { phone, filename = 'image-api.jpg', caption, path } = req.body;
-
-  if (!path && !req.file)
-    return res.status(401).send({
-      message: 'Sending the file is mandatory',
-    });
-
-  const pathFile = path || req.file.path;
-
-  try {
-    let results = [];
-    for (const contato of phone) {
-      results.push(await req.client.sendImage(contato, pathFile, filename, caption));
-    }
-
-    if (results.length === 0) return res.status(400).json('Error sending message');
-    if (req.file) await unlinkAsync(pathFile);
-    returnSucess(res, results);
-  } catch (error) {
-    returnError(req, res, error);
-  }
-}
-
 export async function sendFile(req, res) {
-  const { phone, path, filename = 'file', message } = req.body;
+  const { phone, path, base64, filename = 'file', message, caption } = req.body;
 
-  if (!path && !req.file)
+  if (!path && !req.file && !base64)
     return res.status(401).send({
       message: 'Sending the file is mandatory',
     });
 
-  const pathFile = path || req.file.path;
+  const pathFile = path || base64 || req.file.path;
+  const msg = message || caption;
 
   try {
     let results = [];
     for (const contato of phone) {
-      results.push(await req.client.sendFile(contato, pathFile, filename, message));
+      results.push(await req.client.sendFile(contato, pathFile, { filename: filename, caption: msg }));
     }
 
     if (results.length === 0) return res.status(400).json('Error sending message');
     if (req.file) await unlinkAsync(pathFile);
-    returnSucess(res, results);
-  } catch (error) {
-    returnError(req, res, error);
-  }
-}
-
-export async function sendFile64(req, res) {
-  const { base64, phone, filename } = req.body;
-
-  if (!base64) return res.status(401).send({ message: 'The base64 of the file was not informed' });
-
-  const options = req.body.options || {};
-
-  try {
-    let results = [];
-    for (const contato of phone) {
-      results.push(await req.client.sendFile(contato, base64, Object.keys(options).length > 0 ? options : filename));
-    }
-
-    if (results.length === 0) return res.status(400).json('Error sending message');
     returnSucess(res, results);
   } catch (error) {
     returnError(req, res, error);
@@ -160,12 +117,12 @@ export async function sendLinkPreview(req, res) {
 }
 
 export async function sendLocation(req, res) {
-  const { phone, lat, lng, title } = req.body;
+  const { phone, lat, lng, title, address } = req.body;
 
   try {
     let results = [];
     for (const contato of phone) {
-      results.push(await req.client.sendLocation(contato, lat, lng, title));
+      results.push(await req.client.sendLocation(contato, { lat: lat, lng: lng, address: address, name: title }));
     }
 
     if (results.length === 0) return res.status(400).json('Error sending message');
@@ -211,7 +168,25 @@ export async function sendListMessage(req, res) {
 
     if (results.length === 0) return returnError(req, res, 'Error sending list buttons');
 
-    returnSucess(res, phone, results);
+    returnSucess(res, results);
+  } catch (error) {
+    returnError(req, res, error);
+  }
+}
+
+export async function sendPollMessage(req, res) {
+  const { phone, name, choices, options } = req.body;
+
+  try {
+    let results = [];
+
+    for (const contact of phone) {
+      results.push(await req.client.sendPollMessage(contact, name, choices, options));
+    }
+
+    if (results.length === 0) return returnError(req, res, 'Error sending poll message');
+
+    returnSucess(res, results);
   } catch (error) {
     returnError(req, res, error);
   }
@@ -260,7 +235,7 @@ export async function sendMentioned(req, res) {
     return res.status(201).json({ status: 'success', response: response });
   } catch (error) {
     req.logger.error(error);
-    return res.status(500).json({ status: 'error', message: 'Error on send message mentioned' });
+    return res.status(500).json({ status: 'error', message: 'Error on send message mentioned', error: error });
   }
 }
 export async function sendImageAsSticker(req, res) {
