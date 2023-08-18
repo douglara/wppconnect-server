@@ -31,6 +31,7 @@ import * as SessionController from '../controller/sessionController';
 import * as StatusController from '../controller/statusController';
 import verifyToken from '../middleware/auth';
 import * as HealthCheck from '../middleware/healthCheck';
+import * as prometheusRegister from '../middleware/instrumentation';
 import statusConnection from '../middleware/statusConnection';
 import swaggerDocument from '../swagger.json';
 
@@ -62,11 +63,6 @@ routes.get(
   '/api/:session/get-platform-from-message/:messageId',
   verifyToken,
   DeviceController.getPlatformFromMessage
-);
-routes.get(
-  '/api/:session/status-session',
-  verifyToken,
-  SessionController.getSessionState
 );
 routes.get(
   '/api/:session/qrcode-session',
@@ -163,6 +159,11 @@ routes.post(
   verifyToken,
   statusConnection,
   MessageController.sendVoice64
+);
+routes.get(
+  '/api/:session/status-session',
+  verifyToken,
+  SessionController.getSessionState
 );
 routes.post(
   '/api/:session/send-status',
@@ -832,7 +833,11 @@ routes.post(
   upload.single('file'),
   MiscController.restoreAllSessions
 );
-routes.get('/api/:session/take-screenshot', MiscController.takeScreenshot);
+routes.get(
+  '/api/:session/take-screenshot',
+  verifyToken,
+  MiscController.takeScreenshot
+);
 routes.post('/api/:session/set-limit', MiscController.setLimit);
 
 //Communitys
@@ -888,5 +893,9 @@ routes.get('/api-docs', swaggerUi.setup(swaggerDocument));
 //k8s
 routes.get('/healthz', HealthCheck.healthz);
 routes.get('/unhealthy', HealthCheck.unhealthy);
+
+//Metrics Prometheus
+
+routes.get('/metrics', prometheusRegister.metrics);
 
 export default routes;

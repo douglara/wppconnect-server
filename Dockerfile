@@ -1,10 +1,19 @@
-FROM node:16-buster
-WORKDIR /usr/src/app
+FROM node:lts-alpine3.18 as base
+WORKDIR /usr/src/wpp-server
+ENV NODE_ENV=production PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+COPY package.json ./
+RUN yarn install --production --pure-lockfile && \
+    yarn cache clean
+
+FROM base as build
+WORKDIR /usr/src/wpp-server
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+COPY package.json  ./
+RUN yarn install --production=false --pure-lockfile && \
+    yarn cache clean
+
 COPY . .
 
-RUN apt-get update -qq \
-        && apt-get install -y \
-        fonts-liberation libappindicator3-1 libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release wget xdg-utils
 RUN yarn install
 RUN yarn build
 EXPOSE 8080
